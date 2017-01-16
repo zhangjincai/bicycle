@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lib_general.h"
+#include "lib_gui.h"
+
+
+
+
+
+
+int main(int argc,char *argv[])
+{
+	int err = -1;
+	char ver[32] = {0};
+
+	gui_sae_status_t s_stat;
+	
+	err = lib_gui_init();
+	fprintf(stderr, "err = %d\n", err);
+
+	while(1)
+	{
+		err = lib_gui_version(ver, 2000);
+		fprintf(stderr, "ver err = %d\n", err);
+		fprintf(stderr, "%s\n", ver);
+
+		lib_msleep(500);
+
+		err = lib_gui_get_sae_stat(61, &s_stat, 2000);
+		fprintf(stderr, "sae err = %d\n", err);
+		lib_printf("-----sae stat-----", &s_stat, sizeof(gui_sae_status_t));
+		
+
+		lib_msleep(500);
+	}
+	
+	lib_gui_release();
+
+	return 0;
+}
+
+

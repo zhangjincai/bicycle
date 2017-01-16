@@ -1,0 +1,16 @@
+
+
+把.o文件打包成静态库
+
+gui.c文件调用了lib_eventloop.a lib_gerenal.a
+
+因此,要包含epoll.o,utils.o,zmalloc.o,general.o
+
+
+1.2016-09-30
+由于出现了界面乱码和物理按键导致设备重启现象，现改成TCP短连接方式连接
+
+
+
+
+

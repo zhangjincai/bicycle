@@ -1,0 +1,221 @@
+#ifndef __LIB_WIRELESS_H__
+#define __LIB_WIRELESS_H__
+
+/*@*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+/*@*/
+
+#include <time.h>
+
+/*
+ * 函数返回码定义
+ */
+#define LIB_WL_NULL					(void*)0 
+#define LIB_WL_EOK					(0)  //正常
+#define LIB_WL_ERROR				(-1) //错误
+#define LIB_WL_ETIMEOUT			(-2) //超时
+
+
+/*
+ * 拨号状态
+ */
+enum WL_DIAL_STAT
+{
+	WL_DIAL_STAT_UNDIAL = 0,
+	WL_DIAL_STAT_DIALING,
+	WL_DIAL_STAT_DIALOK,
+	WL_DIAL_STAT_SOFT_RESET,
+	WL_DIAL_STAT_HW_RESET,
+	WL_DIAL_STAT_HW_RESTART,
+	WL_DIAL_STAT_NOT_SIM,
+};
+
+/*
+ * 网络信号等级
+ */
+enum WL_SIGNAL_LEVEL
+{
+	WL_SIGNAL_LEVEL0 = 0,
+	WL_SIGNAL_LEVEL1,
+	WL_SIGNAL_LEVEL2,
+	WL_SIGNAL_LEVEL3,
+	WL_SIGNAL_LEVEL4,
+	WL_SIGNAL_LEVEL5,
+};
+
+/*
+ * 网络模式
+ */
+enum WL_NETWORK_MODEL
+{
+	WL_NETWORK_MODEL_WIRED = 1,
+	WL_NETWORK_MODEL_WIRELESS,
+};
+
+
+/*
+  * 查询模块软件版本 
+  */
+struct lib_wl_cgmr
+{
+	char softversion[32];
+}__attribute__((packed));
+typedef struct lib_wl_cgmr lib_wl_cgmr_t;
+
+/*
+ * 查询硬件版本
+ */
+struct lib_wl_hwver
+{
+	char firmversion[32];
+}__attribute__((packed));
+typedef struct lib_wl_hwver lib_wl_hwver_t;
+
+/*
+ * 信号强度查询
+ */
+struct lib_wl_csq
+{
+	unsigned char rssi;   //信号强度
+	unsigned char fer;    //信道误帧率
+}__attribute__((packed));
+typedef struct lib_wl_csq lib_wl_csq_t;
+
+/*
+ * 系统的信息查询命令 
+ */
+struct lib_wl_sysinfo
+{
+	unsigned char srv_status;  	//系统服务状态
+	unsigned char srv_domain;	//系统服务域
+	unsigned char roam_status; //漫游状态
+	unsigned char sys_mode;    //系统模式
+	unsigned char sim_state;   //UIM卡状态
+}__attribute__((packed));
+typedef struct lib_wl_sysinfo lib_wl_sysinfo_t;
+
+/*
+ * 获取信号质量和系统信息
+ */
+struct lib_wl_csq_sysinfo
+{
+	unsigned char rssi;   //信号强度
+	unsigned char fer;    //信道误帧率
+	unsigned char srv_status;  	//系统服务状态
+	unsigned char srv_domain;	//系统服务域
+	unsigned char roam_status; //漫游状态
+	unsigned char sys_mode;    //系统模式
+	unsigned char sim_state;   //UIM卡状态
+}__attribute__((packed));
+typedef struct lib_wl_csq_sysinfo lib_wl_csq_sysinfo_t;
+
+/*
+ * PPPD拨号信息
+ */
+struct lib_wl_pppd_info
+{
+	unsigned int using_channel;
+	char using_interface[16];
+	char local_ip_address[32];
+	char remote_ip_address[32];
+	char primary_dns_address[32];
+	char secondary_dns_address[32];
+}__attribute__((packed));
+typedef struct lib_wl_pppd_info lib_wl_pppd_info_t;
+
+/*
+ * 获取拨号时间
+ */
+struct lib_wl_dial_time
+{
+	long last_discon_time;
+	long last_dial_time;
+}__attribute__((packed));
+typedef struct lib_wl_dial_time lib_wl_dial_time_t;
+
+/*
+ * 获取GPS信息
+ */
+struct wl_zgpsr
+{
+	double UTC;
+	double latitude;
+	double longitude;
+	double hdop;
+	double altitude;
+	int fix;
+	double cog;
+	double spkm;
+	double spkn;
+	int date;
+	int nsat;
+}__attribute__((packed));
+typedef struct wl_zgpsr wl_zgpsr_t;
+
+struct wl_gga
+{
+	double latitude;  				//纬度，格式为 ddmm.mmmmm（度分格式）
+	unsigned char ns_indicator;  		//纬度半球，N 或 S（北纬或南纬）
+	double longitude; 				//经度，格式为 dddmm.mmmmm（度分格式）
+	unsigned char ew_indicator; 		//经度半球，E 或 W（东经或西经）
+	int status; 					// GPS 状态，0=未定位，1=定位 
+	int satellite; 					//正在使用的用于定位的卫星数量（00~12） 
+};
+typedef struct wl_gga wl_gga_t;
+
+struct wl_gps_attr
+{
+	unsigned char gga:1;
+	unsigned char tm:1;
+	unsigned char rfu:6;
+}__attribute__((packed));
+typedef struct wl_gps_attr wl_gps_attr_t;
+
+struct wl_gps_info
+{
+	struct tm ptm;
+	struct wl_gga gga;
+	struct wl_gps_attr attr;
+}__attribute__((packed));
+typedef struct wl_gps_info wl_gps_info_t;
+
+
+
+
+
+
+
+
+typedef struct wl lib_wl_t;
+
+char *lib_wl_version(void);
+lib_wl_t *lib_wl_new(void);
+void lib_wl_destroy(lib_wl_t *wl);
+lib_wl_t *lib_wl_tcp_new(const char *ipaddr, const unsigned int conn_delay_s);
+void lib_wl_tcp_destroy(lib_wl_t *wl);
+
+int lib_wl_set_model(lib_wl_t *wl, enum WL_NETWORK_MODEL model, const unsigned int msec);  //设置网络模式
+enum WL_DIAL_STAT lib_wl_dial_stat_get(lib_wl_t *wl, const unsigned int msec); //获取拨号状态
+enum WL_SIGNAL_LEVEL lib_wl_signal_level_get(lib_wl_t *wl, const unsigned int msec);	  //获取信号等级
+int lib_wl_cgmr_get(lib_wl_t *wl, lib_wl_cgmr_t *cgmr, const unsigned int msec);   //获取软件版本
+int lib_wl_hwver_get(lib_wl_t *wl, lib_wl_hwver_t *hwver, const unsigned int msec);  //获取硬件版本
+int lib_wl_csq_get(lib_wl_t *wl, lib_wl_csq_t *csq, const unsigned int msec);  //获取信号质量
+int lib_wl_sysinfo_get(lib_wl_t *wl, lib_wl_sysinfo_t *info, const unsigned int msec);  //获取系统信息
+int lib_wl_csq_sysinfo_get(lib_wl_t *wl, lib_wl_csq_sysinfo_t *info, const unsigned int msec); //获取信号质量和系统信息
+int lib_wl_pppd_info_get(lib_wl_t *wl, lib_wl_pppd_info_t *pppd, const unsigned int msec); //获取PPPD信息
+int lib_wl_pppd_is_online(lib_wl_t *wl, const unsigned int msec);   //PPPD ONLINE 
+int lib_wl_dial_time_get(lib_wl_t *wl, lib_wl_dial_time_t *dial_time, const unsigned int msec);  //拨号时间
+int lib_wl_get_gps_info(lib_wl_t *wl, wl_gps_info_t *info, const unsigned int msec);  //获取GPS信息
+int lib_wl_get_gps_zgpsr(lib_wl_t *wl, wl_zgpsr_t *zgpsr, const unsigned int msec);  //获取GPS信息
+
+
+
+/*@*/
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+

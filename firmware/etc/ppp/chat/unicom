@@ -1,0 +1,14 @@
+# /etc/ppp/chat/unicom
+# this is the chat script for unicom
+ABORT "NO CARRIER"
+ABORT "NO DIALTONE"
+ABORT "ERROR"
+ABORT "NO ANSWER"
+ABORT "BUSY"
+TIMEOUT 120
+"" at
+OK ATS0=0
+OK ATE0V1
+OK AT+CGDCONT=1,"IP","CMNET"
+OK atdt*99***1#
+CONNECT

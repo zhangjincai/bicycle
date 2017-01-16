@@ -1,0 +1,23 @@
+
+
+device_config.c		 	设备参数配置文件
+external_interface_board.c  接口板
+fn_hash.c 	哈希回调函数
+fn_ndev.c 	中心协议引导字回调函数
+fn_stake.c 	锁桩协议引导字回调函数
+gps.c 		gps处理
+gui.c 		gui处理函数
+gui_info.c 	gui信息
+ndev_info.c	节点机信息
+ndev_protocol.c		节点机协议
+node_device.c  	节点机对中心端处理
+sae_info.c	锁桩信息
+sae_protocol.c 	锁桩协议
+stake.c 节点机对锁桩端处理
+timer_modify.c  时间矫正
+unity_file_handle.c泛文件处理
+ufile_ctrl_info.c 泛文件信息
+upgrade.c  设备升级
+var_data.c 组包
+
+

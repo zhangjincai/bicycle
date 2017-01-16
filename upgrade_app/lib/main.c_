@@ -1,0 +1,131 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lib_general.h"
+#include "lib_upgrade.h"
+
+
+
+
+
+
+int main(int argc, char *argv[])
+{
+	fprintf(stderr, "Software Compiled Time: %s, %s.\r\n",__DATE__, __TIME__);
+
+	lib_upgrade_t *up = NULL;
+	int ret = LIB_UPE_ERROR;
+	
+	up = lib_upgrade_create(LIB_UPE_MTYPE_NDEV);
+	if(up == LIB_UPE_NULL)
+	{
+		fprintf(stderr, "lib upgrade create failed!\n"); 
+		return 0;
+	}
+
+	#if 0
+	int timeout = 30;
+	int get_timeout = 0;
+	//while(1)
+	{
+		timeout++;
+		lib_upgrade_set_ftp_download_timeout(up, timeout);
+
+		get_timeout = 0;
+		ret = lib_upgrade_get_ftp_download_timeout(up, &get_timeout);
+		fprintf(stderr, "ret = %d\n", ret);
+		fprintf(stderr, "timeout = %d\n", get_timeout);
+
+		lib_sleep(2);
+	}
+	#endif
+
+	int timeout = 20;
+	ret = lib_upgrade_set_ftp_download_timeout(up, timeout);
+	
+	lib_upgrade_get_ftp_download_timeout(up, &timeout);
+	fprintf(stderr, "timeout = %d\n", timeout);
+
+#if 1
+	struct ftp_config ftp_conf;
+	memset(&ftp_conf, 0, sizeof(struct ftp_config));
+
+	ftp_conf.update_type = UPE_TYPE_LNT_ZM;
+	strcpy(ftp_conf.username, "endpointuser");
+	strcpy(ftp_conf.passwd, "11142010");
+
+	
+	strcpy(ftp_conf.firmware_name, "LNT_ZM_V1.1_20160219.lfd");
+	strcpy(ftp_conf.remote_path, "ftp://121.8.152.2:10040/LNT_ZM_V1.1_20160219.lfd");
+	
+	strcpy(ftp_conf.local_path, "/opt/ftppath/LNT_ZM_V1.1_20160219.lfd");
+
+	
+	ftp_conf.connect_timeout = 5;
+	ftp_conf.download_timeout = 60;
+
+	ret = lib_upgrade_set_ftp_config(up, &ftp_conf);
+	fprintf(stderr, "ftp config ret = %d\n", ret);
+
+	ret = lib_upgrade_set_ftp_download_switch(up, UPE_FTP_DOWNLOAD_SW_ON);
+	fprintf(stderr, "ftp download switch ret = %d\n", ret);
+#endif
+
+
+	lib_sleep(5);
+
+	lib_upgrade_set_upgrade_start(up, UPE_TYPE_LNT_ZM);
+
+#if 1
+	while(1)
+	{
+
+		struct firmware_config firmware;
+		memset(&firmware, 0, sizeof(struct firmware_config));
+		
+		ret = lib_upgrade_get_firmware_config(up, UPE_FIRMWARE_TYPE_LNT_ZM, &firmware);
+		fprintf(stderr, "lib_upgrade_get_firmware_config ret = %d\n", ret);
+
+		printf("firmware_name: %s\n", firmware.firmware_name);
+		printf("is_download_complete: %d\n", firmware.is_download_complete);
+		printf("is_write_flash: %d\n", firmware.is_write_flash);
+		printf("is_write_parameter: %d\n", firmware.is_write_parameter);
+
+			
+		printf("ftp_remote_path: %s\n", firmware.ftp_remote_path);
+		printf("ftp_local_path: %s\n", firmware.ftp_local_path);
+		printf("ftp_username: %s\n", firmware.ftp_username);
+		printf("ftp_passwd: %s\n", firmware.ftp_passwd);
+
+
+		if(( firmware.is_download_complete == 2) && (firmware.is_write_flash == 1) && \
+			(firmware.is_write_parameter == 1))
+		{
+			//system("/mnt/firmware/reboot_wdt");
+
+			fprintf(stderr, "---------------------upgrade success--------------------\n");
+		}
+
+		lib_sleep(3);
+	}
+
+
+#endif
+
+#if 0
+	while(1)
+	{
+		fprintf(stderr, "---------------------upgrade success--------------------\n");
+		lib_sleep(10);
+	}
+#endif
+
+	lib_upgrade_destroy(up);
+
+
+	return 0;
+}
+
+
+

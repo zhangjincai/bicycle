@@ -1,0 +1,15 @@
+
+2016-09-14:
+一、gps.c修改：
+1、__get_gga里面gga->latitude=db2/100;和gga->longitude=db2/100;分别改为gga->latitude=db2;和gga->longitude=db2;(by zyp)
+
+二、stake.c修改：
+1、锁桩心跳线程__sae_heartbeat_thread里锁桩尝试发送心跳次数CONFS_STAKE_TRY_HEART_TIMES由1改为3再调用sae_info_del，尝试修复锁桩签到成功后掉线问题。
+
+
+2016-09-29:
+一、default.h修改：
+1 、负载均衡服务器1端口LOAD_SERVER1_PORT_DEFAULT由20000改为20002；
+2、代理服务器由测试改为正式：
+#define NDEV_LNT_IPADDR_DEFAULT			IPV4(183,62,39,30)		
+#define NDEV_LNT_PORT_DEFAULT			10022
