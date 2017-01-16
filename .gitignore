@@ -19,7 +19,7 @@
 
 # Libraries
 *.lib
-*.a
+#*.a
 *.la
 *.lo
 
@@ -67,7 +67,7 @@ dkms.conf
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+#*.a
 *.lib
 
 
