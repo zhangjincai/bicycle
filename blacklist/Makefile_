@@ -1,0 +1,5 @@
+TARGET = blacklist
+
+include ../script/lib.Makefile
+
+	

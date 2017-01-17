@@ -1,0 +1,40 @@
+
+TARGET=gui
+
+CC = arm-none-linux-gnueabi-gcc
+AR = arm-none-linux-gnueabi-ar
+STRIP = arm-none-linux-gnueabi-strip
+
+
+#目标自动依赖
+SRCS = $(wildcard *.c)
+OBJS = $(SRCS:%.c=%.o)
+
+#库名称
+LIB_NAME = lib$(TARGET).a
+
+#头文件
+LIB_INC = lib_$(TARGET).h
+
+
+
+
+#编译库
+all: $(OBJS) lib
+	$(STRIP) $(LIB_NAME)
+
+$(OBJS): %.o:%.c
+	$(CC) $(CFLAGS) -c -o $@ $< 
+
+lib: $(OBJS)
+	$(AR) rcu $(LIB_NAME) $(OBJS) epoll.o zmalloc.o utils.o general.o 
+
+clean:
+	@rm -f $(TARGET).o
+	@rm -f $(LIB_NAME)
+
+
+.PHONY: all clean install
+
+
+

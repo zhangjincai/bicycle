@@ -131,6 +131,9 @@ struct client_info
 #define GUI_CMD_NEARBY_SITE_INFO_REQ					0x8020  //附近网点信息请求
 #define GUI_CMD_NEARBY_SITE_INFO_ACK					0x8021  //附近网点信息确认
 
+/* 周期性备份可用内存等系统信息指令 add by zjc at 2016-11-16 */
+#define GUI_CMD_SYS_INFO_BACKUP		0x9010
+
 
 typedef struct async_notify  
 {
@@ -177,6 +180,7 @@ enum GUI_RESULT
  */
  #define IBOARD_TIME_MS			(120000)  //120秒
  #define GPS_TIMER_MS			(5000) //5秒
+#define SYS_INFO_TIMER_MS		   (10000) //10秒
 
 #if 0
 struct gps_rxbuf
@@ -203,6 +207,7 @@ static unsigned int g_sockfd_type  = 0;
 
 static long long g_iboard_id = 0;
 static long long g_gps_id = 0;
+static long long g_sys_info_id = 0;
 
 static gui_ndev_home_page_info_t g_ndev_home_page_info;  //节点机主页信息
 
@@ -228,6 +233,7 @@ static void *__async_handle_thread(void *arg);  //异步处理线程
 
 static int __iboard_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
 static int __gps_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
+static int __sys_info_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
 
 
 
@@ -284,6 +290,10 @@ int gui_init(void)
 
 	g_gps_id = lib_event_loop_time_create(g_eventloop, GPS_TIMER_MS, __gps_time_proc, NULL, NULL); 
 	fprintf(stderr, "g_gps_id = %u\n", g_gps_id);
+
+	/* 周期性备份可用内存等系统信息 add by zjc at 2017-01-16 */
+	g_sys_info_id = lib_event_loop_time_create(g_eventloop, SYS_INFO_TIMER_MS, __sys_info_time_proc, NULL, NULL); 
+	fprintf(stderr, "g_sys_info_id = %u\n", g_sys_info_id);
 	
 
 	/* UNIX域协议 */
@@ -1544,6 +1554,8 @@ static int __gui_package_explain(const int sockfd, void *ptr, const int len)
 		break;
 		/* end of 附近网点信息查询 */
 
+		
+		
 		default:
 		{
 			fprintf(stderr, "NOT SUPPORT COMMAND\n");
@@ -1771,6 +1783,24 @@ static void *__async_handle_thread(void *arg)
 				}
 			}
 			break;
+
+			/* 系统信息备份 */ 
+			case GUI_CMD_SYS_INFO_BACKUP:
+			{
+				fprintf(stderr, "GUI_CMD_SYS_INFO_BACKUP:0x%02x\n", GUI_CMD_SYS_INFO_BACKUP);
+
+				#if 0
+				struct proc_meminfo pminfo;
+				memset(&pminfo, 0, sizeof(struct proc_meminfo));
+		
+				lib_get_proc_meminfo(&pminfo);
+				fprintf(stderr, "\n------------MemFree:%02d KB-----------\n", pminfo.MemFree);
+				#endif
+
+				system("cat /proc/meminfo > /opt/logpath/meminfo.bak");
+				system("ps > /opt/logpath/progress.bak");
+			}
+			break;
 		}
 	}
 
@@ -1825,5 +1855,19 @@ static int __gps_time_proc(lib_event_loop_t *ep, long long id, void *client_data
 
 	return GPS_TIMER_MS;
 }
+
+
+/* add by zjc at 2017-01-16 */
+static int __sys_info_time_proc(lib_event_loop_t *ep, long long id, void *client_data)
+{
+	fprintf(stderr, "----------sysinfo id: %u\n", id);
+
+#if CONFS_USING_SYS_INFO_BACKUP
+	__sync_notify_put(GUI_CMD_SYS_INFO_BACKUP);
+#endif
+
+	return SYS_INFO_TIMER_MS;
+}
+
 
 
