@@ -1027,7 +1027,7 @@ static int __load_balance(void)
 			
 			SYS_LOG_DEBUG("Network Abnormal, udp faild %d times, sys_reboots:%d\n", test_times, sys_reboots);
 			 
-			if((sys_reboots <= 1) || ((test_times % 145) == 0)) //后面为大概6小时重启 2017-01-09
+			if((sys_reboots <= 2) || ((test_times % 145) == 0)) //后面为大概6小时重启 2017-01-09
 			{		
 				logfd = fopen(SYS_REBOOT_PATH, "wb"); //满足重启条件才写入重启次数 2016-12-31
 				if(NULL != logfd)
