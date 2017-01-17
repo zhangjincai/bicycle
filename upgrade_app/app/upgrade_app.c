@@ -1844,6 +1844,8 @@ static void *__upgrade_thread(void *arg)
 							g_upgrade_type = UPE_TYPE_LNT_ZM;
 							memset(&(up_config.lnt_zm), 0, sizeof(struct firmware_config));  
 							upgrade_config_put(&up_config);	
+
+							__ftp_upgrade_download_status_set(g_ftp_config.update_type, 0xFF); //œ¬‘ÿ ß∞‹
 							#endif
 							
 							break;
