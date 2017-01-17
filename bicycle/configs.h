@@ -41,7 +41,7 @@
 /*
  * 读卡器固件升级功能开启与否 1:开启 0:关闭
  */
-#define CONFS_USING_READER_UPDATE		0
+#define CONFS_USING_READER_UPDATE		1
 
 /*
  * 上传岭南通读卡器版本给中心，用于读卡器升级时判断成功与否 1:开启 0:关闭

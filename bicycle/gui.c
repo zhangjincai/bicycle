@@ -36,6 +36,7 @@ extern lib_wl_t *g_bicycle_wl;
 extern lib_upgrade_t *g_upgrade;
 extern ndev_ftp_download_ctrl_info_t g_ftp_dnl_ctrl_info;  //FTP固件下载信息
 
+extern int lnt_firmware_update_flag; //读卡器升级标记 1:需要升级
 
 /*
  * 报文结构
@@ -1626,9 +1627,22 @@ static void *__async_handle_thread(void *arg)
 				//增加读卡器升级固件信息 add by zjc at 2016-07-25
 				memset(&firmware, 0, sizeof(firmware));
 				lib_upgrade_get_firmware_config(g_upgrade, UPE_TYPE_LNT_ZM, &firmware); //获取固件配置
+				printf("---------Bicycle, lnt_firmware_update_flag:%d\n", lnt_firmware_update_flag);
 				printf("---------Bicycle, is_download_complete:%d, is_write_parameter:%d, is_write_flash:%d\n", \   
 					firmware.is_download_complete, firmware.is_write_parameter, firmware.is_write_flash);
-				if((firmware.is_download_complete == UP_DNL_STAT_COMPLETE) && (firmware.is_write_flash == UP_WR_STAT_WR) && (firmware.is_write_parameter == UP_WR_STAT_NOT_WR_LNT))
+				//printf("---------Bicycle, UP_DNL_STAT_COMPLETE:%d, UP_WR_STAT_NOT_WR_LNT:%d, UP_WR_STAT_WR:%d\n", \   
+					//UP_DNL_STAT_COMPLETE, UP_WR_STAT_NOT_WR_LNT, UP_WR_STAT_WR);
+
+				#if 0 //对应下载后判断版本的条件
+				if((firmware.is_download_complete == UP_DNL_STAT_COMPLETE) && \
+					(firmware.is_write_flash == UP_WR_STAT_WR) && \
+					(firmware.is_write_parameter == UP_WR_STAT_NOT_WR_LNT))
+				#else //对应下载前判断版本的条件
+				if((firmware.is_download_complete == UP_DNL_STAT_COMPLETE) && \
+					(firmware.is_write_flash == UP_WR_STAT_WR) && \
+					(firmware.is_write_parameter == UP_WR_STAT_NOT_WR_LNT) && \
+					(lnt_firmware_update_flag == 1))
+				#endif
 				{
 					g_ndev_home_page_info.lnt_firmware_update_flag = 1; //读卡器固件升级标志
 					memcpy(&g_ndev_home_page_info.lnt_firmware_path, &firmware.ftp_local_path, sizeof(g_ndev_home_page_info.lnt_firmware_path)); //固件路径
@@ -1860,7 +1874,7 @@ static int __gps_time_proc(lib_event_loop_t *ep, long long id, void *client_data
 /* add by zjc at 2017-01-16 */
 static int __sys_info_time_proc(lib_event_loop_t *ep, long long id, void *client_data)
 {
-	fprintf(stderr, "----------sysinfo id: %u\n", id);
+	//fprintf(stderr, "----------sysinfo id: %u\n", id);
 
 #if CONFS_USING_SYS_INFO_BACKUP
 	__sync_notify_put(GUI_CMD_SYS_INFO_BACKUP);

@@ -41,13 +41,14 @@
 
 #include "lib_network_check.h"
 #include "lib_lnt.h"
-//#include <sys/ioctl.h>
-//#include "gpio_ctrl.h"
+#include "lnt.h"
   
 
 #define	SYS_REBOOT_PATH		"/opt/logpath/network_reboot_times.txt" //记录自网络异常后系统重启次数
 
 extern lib_wl_t *g_bicycle_wl; //无线
+
+int lnt_firmware_update_flag = 0; //读卡器升级标记 1:需要升级
 
 //char dail_stat[32] = {0};
 
@@ -2049,6 +2050,46 @@ static void *__ndev_unity_file_mng_thread(void *arg)
 							break;
 						}
 					}
+					#if 1
+					else if(strncmp((char *)ftp_conf.firmware_name, "LNT", strlen("LNT")) == 0) //LNT_*
+					{
+						//printf("---------------LNT ver:%s\n", ftp_conf.firmware_name);
+						
+						char lnt_firmware_path[96]; //用于字符串分割，防止分割后修改源字符串
+						memcpy(&lnt_firmware_path, &ftp_conf.firmware_name, sizeof(lnt_firmware_path));
+
+						char *buf = NULL, *pre_buf = NULL;
+						const char *delim = "_"; //分割符
+						buf = strtok((char *)&lnt_firmware_path, delim);
+						while(NULL != buf){
+							//printf("%s\n",buf);
+							pre_buf = buf; //保存分割出的字符串,取最后一个分割出的字符串
+							buf = strtok(NULL,delim);
+						}
+						printf("-----------new LNT version:%s\n", pre_buf);
+						
+						char version[32] = {0};
+						__lnt_firmware_version_fgets(version);
+						printf("-----------old LNT version:%s\n", version);
+						
+						if((strncmp((char *)&version, pre_buf, 8)) && pre_buf != NULL)
+						{
+							printf("Reader version is not same, need to update ...\n");
+							
+							lnt_firmware_update_flag = 1; //读卡器固件升级标志
+						}
+						else
+						{
+							printf("Reader version is same, don't need to update ...\n");
+
+							lnt_firmware_update_flag = 0; 
+
+							SYS_LOG_NOTICE("Download ver:%s == Local ver:%s, Stop Download!\n", ftp_conf.firmware_name, version);
+							printf("Download ver:%s == Local ver:%s, Stop Download!\n", ftp_conf.firmware_name, version);
+							break;
+						}
+					}
+					#endif
 					#endif
 
 					char *s_ftp_ip = lib_inet_ntoa(dev_conf.nconf.ftp_ip); //FTP IP

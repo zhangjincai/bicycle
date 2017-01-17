@@ -32,6 +32,8 @@ int ndev_protocol_rent_info_qry_req(void *d_ptr, void *s_ptr, const unsigned int
 
 void ndev_protocol_test(void);
 
+int __lnt_firmware_version_fgets(char version[24]);
+
 
 
 

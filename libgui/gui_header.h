@@ -348,7 +348,7 @@ struct gui_ndev_home_page_info
 	
 	unsigned char site_QR_code[128];   //站点二维码  //32->128 2016-11-25
 	
-	#if 0 //CONFS_USING_READER_UPDATE
+	#if 1 //CONFS_USING_READER_UPDATE
 	unsigned char lnt_firmware_update_flag:1;		 //岭南通固件升级标记,1:有新固件需要升级,0:没有新固件需要升级
 	char lnt_firmware_path[96]; 	 //岭南通读卡器升级固件路径
 	#endif

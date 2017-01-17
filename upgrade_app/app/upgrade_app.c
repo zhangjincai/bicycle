@@ -1798,7 +1798,7 @@ static void *__upgrade_thread(void *arg)
 
 						//读取读卡器升级结果
 						lib_share_mem_read(upe_mid, 0, (char *)&update_result, sizeof(lnt_firmware_update_result_t));
-						printf("upgrade_app, update_result:%d, upe_cnt:%d\n", update_result.result, upe_cnt);
+						printf("--------------upgrade_app, update_result:%d, upe_cnt:%d\n", update_result.result, upe_cnt);
 						
 						if(update_result.result == 0) //初始化状态
 						{
@@ -1838,6 +1838,14 @@ static void *__upgrade_thread(void *arg)
 							memset(&update_result, 0, sizeof(update_result));
 							lib_share_mem_write(upe_mid, 0, (char *)&update_result, sizeof(lnt_firmware_update_result_t));
 
+							#if 1
+							//清空升级配置信息
+							up_config.fdnl_ctrl_info.ftype = FIRMWARE_TYPE_LNT_ZM;
+							g_upgrade_type = UPE_TYPE_LNT_ZM;
+							memset(&(up_config.lnt_zm), 0, sizeof(struct firmware_config));  
+							upgrade_config_put(&up_config);	
+							#endif
+							
 							break;
 						}
 					}

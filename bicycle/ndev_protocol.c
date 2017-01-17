@@ -52,7 +52,7 @@ extern lib_upgrade_t *g_upgrade;
 /* 获取岭南通读卡器固件版本号 add by zjc at 2016-08-08 */
 #define LNT_FIRMWARE_PATH			"/opt/config/lnt_firmware_version_file.txt"
 
-static int __lnt_firmware_version_fgets(char version[24])
+int __lnt_firmware_version_fgets(char version[24])
 {
 	char s_version[32] = {0};
 	FILE *fp = NULL;
