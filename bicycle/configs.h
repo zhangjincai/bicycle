@@ -17,7 +17,7 @@
 #define CONFS_NDEV_TRY_REG_TIMES			(3)				//节点机尝试注册次数
 #define CONFS_NDEV_TRY_BTHEART_TIMES		(2)				//节点机心跳发送次数
 #define CONFS_NDEV_BTHEART_WAITTIME		(30)				//心跳等待接收时间   //15->30 2016-11-25
-#define CONFS_NDEV_WAIT_REG_TIMES			(30)				//节点机注册等待回应时间
+#define CONFS_NDEV_WAIT_REG_TIMES			(20)			//节点机注册等待回应时间 //30->20 2017-01-18
 #define CONFS_NDEV_FN_HASH_NUM			(64)				//节点机最大哈希数
 #define CONFS_NDEV_TRY_SEND_TIMES			(3)				//节点机尝试发送次数
 
@@ -63,6 +63,12 @@
  * FTP下载时进行版本比较，下载版本和本地版本不一致才允许下载 1:开启 0:关闭 2017-01-09
  */
 #define CONFS_USING_FTP_DOWNLOAD_VERSION_CHECK		1
+
+
+/*
+ * 周期性备份系统信息
+ */
+#define CONFS_USING_SYS_INFO_BACKUP		1 
 
 
 #endif

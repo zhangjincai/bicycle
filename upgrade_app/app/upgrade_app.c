@@ -1834,11 +1834,6 @@ static void *__upgrade_thread(void *arg)
 
 							remove(up_config.lnt_zm.ftp_local_path);//删除文件 
 
-							//升级失败后将升级结果初始化才能正常触发下一次升级操作!
-							memset(&update_result, 0, sizeof(update_result));
-							lib_share_mem_write(upe_mid, 0, (char *)&update_result, sizeof(lnt_firmware_update_result_t));
-
-							#if 1
 							//清空升级配置信息
 							up_config.fdnl_ctrl_info.ftype = FIRMWARE_TYPE_LNT_ZM;
 							g_upgrade_type = UPE_TYPE_LNT_ZM;
@@ -1846,7 +1841,10 @@ static void *__upgrade_thread(void *arg)
 							upgrade_config_put(&up_config);	
 
 							__ftp_upgrade_download_status_set(g_ftp_config.update_type, 0xFF); //下载失败
-							#endif
+
+							//升级失败后将升级结果初始化才能正常触发下一次升级操作!
+							memset(&update_result, 0, sizeof(update_result));
+							lib_share_mem_write(upe_mid, 0, (char *)&update_result, sizeof(lnt_firmware_update_result_t));
 							
 							break;
 						}

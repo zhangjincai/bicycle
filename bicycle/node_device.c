@@ -2050,7 +2050,7 @@ static void *__ndev_unity_file_mng_thread(void *arg)
 							break;
 						}
 					}
-					#if 1
+					#if CONFS_USING_READER_UPDATE
 					else if(strncmp((char *)ftp_conf.firmware_name, "LNT", strlen("LNT")) == 0) //LNT_*
 					{
 						//printf("---------------LNT ver:%s\n", ftp_conf.firmware_name);
@@ -2086,6 +2086,7 @@ static void *__ndev_unity_file_mng_thread(void *arg)
 
 							SYS_LOG_NOTICE("Download ver:%s == Local ver:%s, Stop Download!\n", ftp_conf.firmware_name, version);
 							printf("Download ver:%s == Local ver:%s, Stop Download!\n", ftp_conf.firmware_name, version);
+
 							break;
 						}
 					}

@@ -1803,14 +1803,6 @@ static void *__async_handle_thread(void *arg)
 			{
 				fprintf(stderr, "GUI_CMD_SYS_INFO_BACKUP:0x%02x\n", GUI_CMD_SYS_INFO_BACKUP);
 
-				#if 0
-				struct proc_meminfo pminfo;
-				memset(&pminfo, 0, sizeof(struct proc_meminfo));
-		
-				lib_get_proc_meminfo(&pminfo);
-				fprintf(stderr, "\n------------MemFree:%02d KB-----------\n", pminfo.MemFree);
-				#endif
-
 				system("cat /proc/meminfo > /opt/logpath/meminfo.bak");
 				system("ps > /opt/logpath/progress.bak");
 			}
