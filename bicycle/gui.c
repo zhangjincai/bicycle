@@ -135,6 +135,9 @@ struct client_info
 /* 周期性备份可用内存等系统信息指令 add by zjc at 2016-11-16 */
 #define GUI_CMD_SYS_INFO_BACKUP		0x9010
 
+/* 周期性备份网卡信息指令 add by zjc at 2016-11-18 */
+#define GUI_CMD_NET_FLOW_BACKUP		0x9020
+
 
 typedef struct async_notify  
 {
@@ -179,9 +182,11 @@ enum GUI_RESULT
 /*
  * 定时器
  */
- #define IBOARD_TIME_MS			(120000)  //120秒
- #define GPS_TIMER_MS			(5000) //5秒
-#define SYS_INFO_TIMER_MS		   (10000) //10秒
+#define IBOARD_TIME_MS			(120000)  //120秒
+#define GPS_TIMER_MS			(5000) //5秒
+#define SYS_INFO_TIMER_MS		(10000) //10秒
+#define NET_FLOW_TIMER_MS		(3000) //3秒
+
 
 #if 0
 struct gps_rxbuf
@@ -209,6 +214,9 @@ static unsigned int g_sockfd_type  = 0;
 static long long g_iboard_id = 0;
 static long long g_gps_id = 0;
 static long long g_sys_info_id = 0;
+static long long g_net_flow_id = 0;
+
+
 
 static gui_ndev_home_page_info_t g_ndev_home_page_info;  //节点机主页信息
 
@@ -235,6 +243,7 @@ static void *__async_handle_thread(void *arg);  //异步处理线程
 static int __iboard_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
 static int __gps_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
 static int __sys_info_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
+static int __net_flow_time_proc(lib_event_loop_t *ep, long long id, void *client_data);
 
 
 
@@ -281,7 +290,7 @@ int gui_init(void)
 	memset(&g_ndev_home_page_info, 0, sizeof(gui_ndev_home_page_info_t));
 	memset(&gconf, 0, sizeof(struct gps_config));
 		
-	g_eventloop = lib_event_loop_create(8);
+	g_eventloop = lib_event_loop_create(10); //8->10 2017-01-18
 	if(g_eventloop == LIB_EP_NULL)
 		goto ERR;
 
@@ -295,6 +304,10 @@ int gui_init(void)
 	/* 周期性备份可用内存等系统信息 add by zjc at 2017-01-16 */
 	g_sys_info_id = lib_event_loop_time_create(g_eventloop, SYS_INFO_TIMER_MS, __sys_info_time_proc, NULL, NULL); 
 	fprintf(stderr, "g_sys_info_id = %u\n", g_sys_info_id);
+
+	/* 周期性备份网卡信息 add by zjc at 2017-01-18 */
+	g_net_flow_id = lib_event_loop_time_create(g_eventloop, NET_FLOW_TIMER_MS, __net_flow_time_proc, NULL, NULL); 
+	fprintf(stderr, "g_net_flow_id = %u\n", g_net_flow_id);
 	
 
 	/* UNIX域协议 */
@@ -1602,6 +1615,7 @@ Done:
 static void *__async_handle_thread(void *arg)
 {
 	unsigned int notify = NDEV_NOTIFY_INIT;
+	unsigned int net_info_read_flag = 0; //读取备份网卡信息标志 0:失败 1:成功
 
 	device_config_t config;
 	memset(&config, 0, sizeof(device_config_t));
@@ -1807,6 +1821,139 @@ static void *__async_handle_thread(void *arg)
 				system("ps > /opt/logpath/progress.bak");
 			}
 			break;
+
+			/* 网卡信息备份 */ 
+			case GUI_CMD_NET_FLOW_BACKUP:
+			{
+				fprintf(stderr, "GUI_CMD_NET_FLOW_BACKUP:0x%02x\n", GUI_CMD_NET_FLOW_BACKUP);
+
+				#if CONFS_USING_NET_FLOW_BACKUP
+				FILE *net_fd = NULL;
+				long long rx_bytes = 0, tx_bytes = 0;
+				static long long rx_bytes_pre = 0, tx_bytes_pre = 0;	
+				gui_net_info_backup_t net_info_backup;
+				int err = 0;
+
+				memset(&net_info_backup, 0, sizeof(gui_net_info_backup_t)); //must!
+				
+				net_fd = fopen(NET_INFO_BACKUP_PATH, "rb");  
+				if(NULL != net_fd)
+				{
+					err = fread(&net_info_backup, sizeof(gui_net_info_backup_t), 1, net_fd);
+					if(err == 1)
+					{
+						net_info_read_flag = 1;
+					}
+					else 
+					{
+						fprintf(stderr, "------------read net backup info failed!\n");
+						SYS_LOG_DEBUG("ERROR:read net backup info failed!");
+						
+						net_info_read_flag = 0;
+					}    
+			
+					fclose(net_fd);
+					net_fd = NULL;
+				}
+				else
+				{
+					fprintf(stderr, "------------open net backup info failed!\n");
+					SYS_LOG_DEBUG("ERROR:open net backup info for read failed!");
+
+					net_info_read_flag = 0;
+				}
+			
+				//获取网络接入方式
+				gui_ndev_page_config_t config;
+				memset(&config, 0, sizeof(gui_ndev_page_config_t));
+
+				err = gui_get_ndev_page_config(&config);
+				if(err == B_DEV_EOK)
+				{
+					if(config.access_conf.using_wireless == 1)
+			        {
+						lib_get_network_flow("ppp0", &rx_bytes, &tx_bytes); //无线
+					}
+					else
+					{
+						lib_get_network_flow("eth1", &rx_bytes, &tx_bytes); //有线
+					}
+				}
+		        
+				//接收计数
+				if(rx_bytes > rx_bytes_pre) //本次>上次，加增量
+				{
+					printf("\n----------------(rx_bytes - rx_bytes_pre):%lld\n", (rx_bytes - rx_bytes_pre));
+					net_info_backup.rx_bytes += (rx_bytes - rx_bytes_pre);
+				}  
+				else if((rx_bytes < rx_bytes_pre) && (rx_bytes > 0)) //重新拨号网卡重新开始计数
+				{
+					printf("\n----------------(redial, rx_bytes):%lld\n", rx_bytes);
+					net_info_backup.rx_bytes += rx_bytes;
+				}
+				//发送计数
+				if(tx_bytes > tx_bytes_pre)
+				{
+					printf("\n----------------(tx_bytes - tx_bytes_pre):%lld\n\n", (tx_bytes - tx_bytes_pre));
+					net_info_backup.tx_bytes += (tx_bytes - tx_bytes_pre);
+				}
+				else if((tx_bytes < tx_bytes_pre) && (tx_bytes > 0)) 
+				{
+					printf("\n----------------(redial, tx_bytes):%lld\n", tx_bytes);
+					net_info_backup.tx_bytes += tx_bytes;
+				}
+				
+				net_info_backup.total_bytes = net_info_backup.rx_bytes + net_info_backup.tx_bytes;
+			   
+				//每个月1号统计清零
+				time_t timep;  
+			    struct tm *p_tm;             
+				
+			    timep = time(NULL);  
+			    p_tm = localtime(&timep);  
+				
+			    //printf("========== %d-%d-%d ", (p_tm->tm_year+1900), (p_tm->tm_mon+1), p_tm->tm_mday);  
+		   		//printf(" %d:%d:%d ==========\n", p_tm->tm_hour, p_tm->tm_min, p_tm->tm_sec);  
+
+				if((p_tm->tm_mday == 1) && (p_tm->tm_hour == 0) && (p_tm->tm_min == 0) && (p_tm->tm_sec < 3))
+				{
+					net_info_backup.rx_bytes = 0;
+					net_info_backup.tx_bytes = 0;
+					net_info_backup.total_bytes = 0;
+
+					SYS_LOG_DEBUG("Start of the month, clear the flow count!");
+				}
+
+				//第一次写入或者不是第一次写入但是前面读取成功才写入,防止读取失败时写入错误数据
+				if((net_info_read_flag == 1) || ((access(NET_INFO_BACKUP_PATH, F_OK) != 0) && (net_info_read_flag == 0)))	
+				{
+					net_fd = fopen(NET_INFO_BACKUP_PATH, "wb");
+					if(NULL != net_fd)
+					{
+						err = fwrite(&net_info_backup, sizeof(gui_net_info_backup_t), 1, net_fd);
+						if(err != 1)
+						{
+							fprintf(stderr, "-------------write net backup info failed!\n");
+							SYS_LOG_DEBUG("ERROR:write net backup info failed!");
+						}
+
+						fflush(net_fd);
+						fclose(net_fd);
+						net_fd = NULL;
+					}
+					else
+					{
+						fprintf(stderr, "-------------open net backup info failed!\n");
+						SYS_LOG_DEBUG("ERROR:open net backup info for write failed!");
+					}
+				}
+			
+				//备份上次数据
+				rx_bytes_pre = rx_bytes;
+				tx_bytes_pre = tx_bytes;	
+				#endif
+			}
+			break;
 		}
 	}
 
@@ -1875,5 +2022,17 @@ static int __sys_info_time_proc(lib_event_loop_t *ep, long long id, void *client
 	return SYS_INFO_TIMER_MS;
 }
 
+
+/* add by zjc at 2017-01-18 */
+static int __net_flow_time_proc(lib_event_loop_t *ep, long long id, void *client_data)
+{
+	//fprintf(stderr, "----------netflow id: %u\n", id);
+
+#if CONFS_USING_NET_FLOW_BACKUP
+	__sync_notify_put(GUI_CMD_NET_FLOW_BACKUP);
+#endif
+
+	return NET_FLOW_TIMER_MS;
+}
 
 

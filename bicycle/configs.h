@@ -58,17 +58,23 @@
  */
 #define CONFS_USING_AUTO_REBOOT_3G		1
 
-
 /*
  * FTP下载时进行版本比较，下载版本和本地版本不一致才允许下载 1:开启 0:关闭 2017-01-09
  */
 #define CONFS_USING_FTP_DOWNLOAD_VERSION_CHECK		1
 
-
 /*
  * 周期性备份系统信息
  */
 #define CONFS_USING_SYS_INFO_BACKUP		1 
+
+/*
+ * 周期性备份网卡信息
+ */
+#define CONFS_USING_NET_FLOW_BACKUP		1 
+
+#define	NET_INFO_BACKUP_PATH	"/opt/logpath/net_info.txt" //网卡信息备份路径
+
 
 
 #endif

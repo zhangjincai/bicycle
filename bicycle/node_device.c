@@ -851,8 +851,6 @@ static int __udp_net_sendto(const int sockfd, const char *ipaddr, const unsigned
 
 #define UDP_ERROR_TIMES_TO_REBOOT	1 // 2->1 2017-01-09
 
-#define	NET_INFO_BACKUP_PATH	"/opt/logpath/net_info.txt"
-
 
 static int __load_balance(void)
 {
