@@ -1842,7 +1842,7 @@ static void *__upgrade_thread(void *arg)
 							//清空升级配置信息
 							up_config.fdnl_ctrl_info.ftype = FIRMWARE_TYPE_LNT_ZM;
 							g_upgrade_type = UPE_TYPE_LNT_ZM;
-							memset(&(up_config.lnt_zm), 0, sizeof(struct firmware_config));  
+							memset(&(up_config.lnt_zm), 0, sizeof(struct firmware_config));
 							upgrade_config_put(&up_config);	
 							#endif
 							
