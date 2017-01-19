@@ -29,14 +29,6 @@ insmod /mnt/firmware/gpio_ctrl.ko
 
 #set usb serial
 
-#restart telnetd servers, add by zjc at 2017-01-18
-if [ -f /mnt/firmware/telnetd.sh ] ;
-then
-        echo "restart telnetd servers..."
-        cd /mnt/firmware/;./telnetd.sh
-fi
-
-
 
 
 
