@@ -170,3 +170,5 @@ CTestTestfile.cmake
 
 #add directory to ignore
 /images/
+/firmware/
+/application/
