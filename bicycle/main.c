@@ -56,7 +56,7 @@ static void __signals_init(void)
 	
 	struct sigaction sa;
 
-	sa.sa_flags = 0;
+	sa.sa_flags = 0; //不设置任何标志
 	sigaddset(&sa.sa_mask, SIGPIPE);
     sigaddset(&sa.sa_mask, SIGCHLD); 
    	sigaddset(&sa.sa_mask, SIGINT);

@@ -66,7 +66,7 @@
 /*
  * 周期性备份系统信息
  */
-#define CONFS_USING_SYS_INFO_BACKUP		1 
+#define CONFS_USING_SYS_INFO_BACKUP		0  //无意义，因为不是备份出问题时的信息
 
 /*
  * 周期性备份网卡信息
